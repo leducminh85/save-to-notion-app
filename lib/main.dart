@@ -12,8 +12,31 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
+    final seed = const Color(0xFFFFA726); // warm orange
     return MaterialApp(
-      title: 'Save to Notion',
+      title: 'Notion QuickSave',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: seed),
+        useMaterial3: true,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          ),
+        ),
+        // cardTheme removed for SDK compatibility; default Card styling will be used
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFFF6F4FF),
+          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
     );
@@ -260,156 +283,166 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Save to Notion (Direct API)")),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            "Notion Settings",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _tokenCtrl,
-            decoration: const InputDecoration(
-              labelText: "Notion Integration Token (secret_...)",
-              border: OutlineInputBorder(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        toolbarHeight: 100,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFFFA726), Color(0xFFFFD54F), Color(0xFFFCEBC6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            obscureText: true,
-            onEditingComplete: _saveSecrets,
-            onChanged: (_) {
-              // ensure native share receiver can read token from SharedPreferences
-              _saveSecrets();
-            },
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
+          padding: const EdgeInsets.only(left: 16, top: 40),
+          child: Row(
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _dbCtrl,
-                  decoration: const InputDecoration(
-                    labelText: "Database ID",
-                    border: OutlineInputBorder(),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFFFA726), Color(0xFFFFD54F)],
                   ),
-                  onEditingComplete: _saveSecrets,
-                  onChanged: (_) {
-                    // ensure native share receiver can read db id from SharedPreferences
-                    _saveSecrets();
-                  },
                 ),
+                child: const Icon(Icons.save_alt, color: Colors.white),
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _detectDbProperties,
-                child: const Text('Detect'),
+              const SizedBox(width: 12),
+              const Text(
+                'Notion QuickSave',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          if (_dbProps != null) ...[
-            Text(
-              'Detected properties:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _dbProps!.entries.map((e) => '${e.key}:${e.value}').join(', '),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Text('Title prop:'),
-                const SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: _selectedTitleProp,
-                  hint: const Text('Select'),
-                  items: _dbProps!.keys
-                      .map((k) => DropdownMenuItem(value: k, child: Text(k)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedTitleProp = v),
-                ),
-                const SizedBox(width: 16),
-                const Text('URL prop:'),
-                const SizedBox(width: 8),
-                DropdownButton<String?>(
-                  value: _selectedUrlProp,
-                  hint: const Text('Select or create'),
-                  items: [
-                    ..._dbProps!.keys.map(
-                      (k) => DropdownMenuItem(value: k, child: Text(k)),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Notion Settings',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    const DropdownMenuItem(
-                      value: '___create_url___',
-                      child: Text('Create URL property'),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _tokenCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Integration Token',
+                        prefixIcon: Icon(Icons.vpn_key),
+                      ),
+                      obscureText: true,
+                      onEditingComplete: _saveSecrets,
+                      onChanged: (_) => _saveSecrets(),
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _dbCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Database ID',
+                              prefixIcon: Icon(Icons.storage),
+                            ),
+                            onEditingComplete: _saveSecrets,
+                            onChanged: (_) => _saveSecrets(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _detectDbProperties,
+                          child: const Text('Detect'),
+                        ),
+                      ],
+                    ),
+
+                    if (_dbProps != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Detected: ${_dbProps!.length}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
                   ],
-                  onChanged: (v) async {
-                    if (v == '___create_url___') {
-                      // create property
-                      final token = _tokenCtrl.text.trim();
-                      final dbId = _dbCtrl.text.trim();
-                      final notion = NotionClient(token: token);
-                      try {
-                        await notion.addDatabaseProperty(dbId, 'URL', 'url');
-                        await _detectDbProperties();
-                        setState(() => _status = 'Created URL property');
-                      } catch (e) {
-                        setState(
-                          () => _status = '❌ Error creating property: $e',
-                        );
-                      }
-                    } else {
-                      setState(() => _selectedUrlProp = v);
-                    }
-                  },
                 ),
-              ],
+              ),
             ),
+
             const SizedBox(height: 12),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Save a Link',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _titleCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        prefixIcon: Icon(Icons.title),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _urlCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'URL',
+                        prefixIcon: Icon(Icons.link),
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _tagsCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Tags (comma-separated)',
+                        prefixIcon: Icon(Icons.label),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _saving ? null : _saveToNotion,
+                        icon: const Icon(Icons.cloud_upload),
+                        label: Text(_saving ? 'Saving...' : 'Save to Notion'),
+                      ),
+                    ),
+                    if (_status != null) ...[
+                      const SizedBox(height: 10),
+                      Text(_status!, style: const TextStyle(fontSize: 14)),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ],
-
-          const Text(
-            "Save a link",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _titleCtrl,
-            decoration: const InputDecoration(
-              labelText: "Title",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _urlCtrl,
-            decoration: const InputDecoration(
-              labelText: "URL",
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.url,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _tagsCtrl,
-            decoration: const InputDecoration(
-              labelText: "Tags (comma-separated, optional)",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          ElevatedButton(
-            onPressed: _saving ? null : _saveToNotion,
-            child: Text(_saving ? "Saving..." : "Save to Notion"),
-          ),
-
-          if (_status != null) ...[
-            const SizedBox(height: 12),
-            Text(_status!, style: const TextStyle(fontSize: 14)),
-          ],
-        ],
+        ),
       ),
     );
   }
